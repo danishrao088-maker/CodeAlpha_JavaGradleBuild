@@ -1,0 +1,63 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'jacoco'
+}
+
+group   = 'com.codealpha'
+version = '1.0.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // JSON serialization (dependency-management demo)
+    implementation 'com.google.code.gson:gson:2.11.0'
+
+    // Unit testing
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
+
+application {
+    mainClass = 'com.codealpha.sms.Main'
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events 'passed', 'skipped', 'failed'
+    }
+    finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required  = true
+        html.required = true
+    }
+}
+
+// Executable "fat" JAR (app + dependencies) -> java -jar build/libs/....jar
+jar {
+    archiveBaseName = 'student-management-system'
+    manifest {
+        attributes 'Main-Class': application.mainClass.get(),
+                   'Implementation-Version': project.version
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA', 'module-info.class'
+}
+tasks.named('run') {
+    standardInput = System.in
+}
